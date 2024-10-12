@@ -20,10 +20,10 @@ os.environ["CC"] = "gcc"
 # ]
 
 extensions = [
-    Extension("KNN_cy", ["KNN_cy.pyx"], include_dirs=[numpy.get_include()]),
+    Extension("KNN_c", ["KNN_c.pyx"], include_dirs=[numpy.get_include()]),
 ]
 
 setup(
-    name="KNN_cy",
-    ext_modules=cythonize(["KNN_cy.pyx"], annotate=True, language_level="3"),
+    name="KNN_c",
+    ext_modules=cythonize(["KNN_c.pyx"], annotate=True, language_level="3"),
 )

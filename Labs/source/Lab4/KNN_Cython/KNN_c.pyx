@@ -7,7 +7,7 @@ DTYPE = np.double
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef KNN_c(double[:,:] x_train, double[:] class_train, double[:,:] x_test, Py_ssize_t k):
+cpdef long[:] KNN_c(double[:,:] x_train, double[:] class_train, double[:,:] x_test, Py_ssize_t k):
 
     distances = np.zeros((x_test.shape[0],x_train.shape[0]), dtype=DTYPE)
     cdef double[:,:] distances_view = distances
@@ -16,16 +16,18 @@ cpdef KNN_c(double[:,:] x_train, double[:] class_train, double[:,:] x_test, Py_s
         for j in range(x_test.shape[0]):
             distances_view[j,i]= sqrt((x_train[i,0]-x_test[j,0])*(x_train[i,0]-x_test[j,0]) +(x_train[i,1]-x_test[j,1])*(x_train[i,1]-x_test[j,1]) )
 
-    id = bn.argpartition(distances, k, axis=1)[:, :k]  # On récupère les indices des k plus petites distances
+    id = bn.argpartition(distances_view, k, axis=1)[:, :k]  # On récupère les indices des k plus petites distances
     closest_k_distances = np.take_along_axis(distances, id, axis=1)  # On trie ces k distances
-    id_sorted = np.argsort(closest_k_distances, axis=1)  # Trie les indices par ordre croissant de distance
+    cdef double[:,:] closest_k_distances_view = closest_k_distances
+    id_sorted = np.argsort(closest_k_distances_view, axis=1)  # Trie les indices par ordre croissant de distance
     final_ids = np.take_along_axis(id, id_sorted, axis=1).astype(np.int64)
 
     labels = np.array(class_train)[final_ids.astype(int)]
     
     class_pred = np.zeros(x_test.shape[0], dtype=int)
+    cdef long[:] class_pred_view = class_pred
 
     for i in range(x_test.shape[0]):
-        class_pred[i] = np.bincount(labels[i].astype(np.int64)).argmax()
+        class_pred_view[i] = np.bincount(labels[i].astype(np.int64)).argmax()
 
-    return class_pred
+    return class_pred_view
